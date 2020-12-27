@@ -1,0 +1,28 @@
+{
+    "$schema": "https://getcomposer.org/schema.json",
+    "name": "exercisebook/flysystem-imagex",
+    "description": "ImageX adapter for Cloudinary",
+    "type": "library",
+    "authors": [
+        {
+            "name": "Eric_Lian",
+            "email": "public@superexercisebook.com"
+        }
+    ],
+    "require": {
+        "php" : ">=7.2",
+        "league/flysystem": ">=2.0.0",
+        "volcengine/volc-sdk-php": "dev-main"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "9.5.x-dev"
+    },
+    "license": "MIT",
+    "version": "0.1.0",
+    "minimum-stability": "alpha",
+    "autoload": {
+        "psr-4": {
+            "ExerciseBook\\Flysystem\\ImageX\\": "src/"
+        }
+    }
+}
