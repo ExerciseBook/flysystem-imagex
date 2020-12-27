@@ -1,0 +1,14 @@
+<?php
+
+namespace ExerciseBook\Flysystem\ImageX\Test;
+
+class Config
+{
+    static public $accessKey = 'Access Key';
+
+    static public $secretKey = 'Secret Key';
+
+    static public $imageXRegion = 'cn-north-1';
+
+    static public $imageXServiceId = 'Service ID';
+}

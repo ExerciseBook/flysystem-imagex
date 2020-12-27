@@ -1,9 +1,13 @@
 <?php
 
-namespace ExerciseBook\Flysystem\ImageX;
+namespace ExerciseBook\Flysystem\ImageX\Test;
 
-use ExerciseBook\Flysystem\ImageX\Exception\NotImplementedException;
+use ExerciseBook\Flysystem\ImageX\ImageXAdapter;
+use ExerciseBook\Flysystem\ImageX\Test\Test\Exception\NotImplementedException;
+use League\Flysystem\Config as FlysystemConfig;
 use PHPUnit\Framework\TestCase;
+
+require('Config.php');
 
 class ImageXAdapterTest extends TestCase
 {
@@ -12,9 +16,10 @@ class ImageXAdapterTest extends TestCase
      */
     private $adapter;
 
-    public function testWriteStream()
+    protected function setUp(): void
     {
-        $this->expectException(NotImplementedException::class);
+        $this->adapter = new ImagexAdapter(Config::$imageXRegion, Config::$accessKey, Config::$secretKey,
+            Config::$imageXServiceId);
     }
 
     public function testDeleteDirectory()
@@ -43,8 +48,12 @@ class ImageXAdapterTest extends TestCase
 
     public function testWrite()
     {
-        $this->expectException(NotImplementedException::class);
+        $config = new FlysystemConfig();
+        $this->adapter->write('test/test.txt', '1145141919810', $config);
 
+        $contents = file_get_contents('resources/ori.jpg');
+        $this->adapter->write('test/ori.jpg', $contents, $config);
+        $this->assertTrue(true);
     }
 
     public function testCreateDirectory()
@@ -105,10 +114,5 @@ class ImageXAdapterTest extends TestCase
     {
         $this->expectException(NotImplementedException::class);
 
-    }
-
-    protected function setUp(): void
-    {
-        $this->adapter = new ImagexAdapter();
     }
 }

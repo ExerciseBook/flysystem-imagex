@@ -3,12 +3,29 @@
 namespace ExerciseBook\Flysystem\ImageX;
 
 use ExerciseBook\Flysystem\ImageX\Exception\NotImplementedException;
+use GuzzleHttp\Client;
 use League\Flysystem\Config;
 use League\Flysystem\FileAttributes;
 use League\Flysystem\FilesystemAdapter;
+use League\Flysystem\UnableToWriteFile;
+use Volc\Service\ImageX;
 
 class ImageXAdapter implements FilesystemAdapter
 {
+
+    /**
+     * @var ImageX
+     */
+    private $client;
+
+    private $serviceId;
+
+    public function __construct(string $region, string $accessKey, string $secretKey, string $serviceId){
+        $this->client = ImageX::getInstance($region);
+        $this->client->setAccessKey($accessKey);
+        $this->client->setSecretKey($secretKey);
+        $this->serviceId = $serviceId;
+    }
 
     public function fileExists(string $path): bool
     {
@@ -18,8 +35,60 @@ class ImageXAdapter implements FilesystemAdapter
 
     public function write(string $path, string $contents, Config $config): void
     {
-        // TODO: Implement write() method.
-        throw new NotImplementedException();
+        // Sign
+        $applyParams = [];
+        $applyParams["Action"] = "ApplyImageUpload";
+        $applyParams["Version"] = "2018-08-01";
+        $applyParams["ServiceId"] = $this->serviceId;
+        $applyParams["UploadNum"] = 1;
+        $applyParams["StoreKeys"] = array();
+        $queryStr = http_build_query($applyParams);
+
+        $queryStr = $queryStr . "&StoreKeys=" . $path;
+        $response = $this->client->applyUploadImage(['query' => $queryStr]);
+
+        $applyResponse = json_decode($response, true);
+        if (isset($applyResponse["ResponseMetadata"]["Error"])) {
+            throw new UnableToWriteFile(sprintf("uploadImages: request id %s error %s", $applyResponse["ResponseMetadata"]["RequestId"], $applyResponse["ResponseMetadata"]["Error"]["Message"]));
+        }
+
+        $uploadAddr = $applyResponse['Result']['UploadAddress'];
+        if (count($uploadAddr['UploadHosts']) == 0) {
+            throw new UnableToWriteFile("uploadImages: no upload host found");
+        }
+        $uploadHost = $uploadAddr['UploadHosts'][0];
+        if (count($uploadAddr['StoreInfos']) != 1) {
+            throw new UnableToWriteFile("uploadImages: store infos num != upload num");
+        }
+
+        // Upload
+        $crc32 = dechex(crc32($contents));
+        $tosClient = new Client([
+            'base_uri' => "https://" . $uploadHost,
+            'timeout' => 5.0,
+        ]);
+        $response = $tosClient->request('PUT',
+            $uploadAddr['StoreInfos'][0]["StoreUri"],
+            [   "body" => $contents,
+                "headers" =>
+                    ['Authorization' => $uploadAddr['StoreInfos'][0]["Auth"],
+                    'Content-CRC32' => $crc32]
+            ]);
+        $uploadResponse = json_decode((string) $response->getBody(), true);
+        if (!isset($uploadResponse["success"]) || $uploadResponse["success"] != 0) {
+            throw new UnableToWriteFile("upload " . $path . " error");
+        }
+
+        // Commit
+        $commitParams = [];
+        $commitParams["ServiceId"] = $this->serviceId;
+        $commitBody = [];
+        $commitBody["SessionKey"] = $uploadAddr['SessionKey'];
+        $commitReq = [
+            "query" => $commitParams,
+            "json" => $commitBody,
+        ];
+        $response = $this->client->commitUploadImage($commitReq);
     }
 
     public function writeStream(string $path, $contents, Config $config): void
