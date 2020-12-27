@@ -93,8 +93,7 @@ class ImageXAdapter implements FilesystemAdapter
 
     public function writeStream(string $path, $contents, Config $config): void
     {
-        // TODO: Implement writeStream() method.
-        throw new NotImplementedException();
+        $this->write($path, stream_get_contents($contents), $config);
     }
 
     public function read(string $path): string

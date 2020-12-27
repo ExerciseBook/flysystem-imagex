@@ -22,6 +22,25 @@ class ImageXAdapterTest extends TestCase
             Config::$imageXServiceId);
     }
 
+    public function testWrite()
+    {
+        $config = new FlysystemConfig();
+        $this->adapter->write('test/test.txt', '1145141919810', $config);
+
+        $contents = file_get_contents('resources/ori.jpg');
+        $this->adapter->write('test/ori.jpg', $contents, $config);
+        $this->assertTrue(true);
+    }
+
+    public function testWriteStream()
+    {
+        $config = new FlysystemConfig();
+        $contents = fopen('resources/ori.jpg', 'rb');
+        $this->adapter->writeStream('test/ori_stream.jpg', $contents, $config);
+        fclose($contents);
+        $this->assertTrue(true);
+    }
+
     public function testDeleteDirectory()
     {
         $this->expectException(NotImplementedException::class);
@@ -44,16 +63,6 @@ class ImageXAdapterTest extends TestCase
     {
         $this->expectException(NotImplementedException::class);
 
-    }
-
-    public function testWrite()
-    {
-        $config = new FlysystemConfig();
-        $this->adapter->write('test/test.txt', '1145141919810', $config);
-
-        $contents = file_get_contents('resources/ori.jpg');
-        $this->adapter->write('test/ori.jpg', $contents, $config);
-        $this->assertTrue(true);
     }
 
     public function testCreateDirectory()
