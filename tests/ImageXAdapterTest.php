@@ -3,8 +3,9 @@
 namespace ExerciseBook\Flysystem\ImageX\Test;
 
 use ExerciseBook\Flysystem\ImageX\ImageXAdapter;
-use ExerciseBook\Flysystem\ImageX\Test\Test\Exception\NotImplementedException;
+use ExerciseBook\Flysystem\ImageX\Exception\NotImplementedException;
 use League\Flysystem\Config as FlysystemConfig;
+use League\Flysystem\UnableToDeleteFile;
 use PHPUnit\Framework\TestCase;
 
 require('Config.php');
@@ -77,10 +78,17 @@ class ImageXAdapterTest extends TestCase
 
     }
 
+    public function testDeleteNonExistentFile()
+    {
+        $this->expectException(UnableToDeleteFile::class);
+        $this->adapter->delete('test/non_existent_file.jpg');
+        $this->assertTrue(true);
+    }
+
     public function testDelete()
     {
-        $this->expectException(NotImplementedException::class);
-
+        $this->adapter->delete('test/ori_stream.jpg');
+        $this->assertTrue(true);
     }
 
     public function testSetVisibility()

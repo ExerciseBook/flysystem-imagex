@@ -7,6 +7,7 @@ use GuzzleHttp\Client;
 use League\Flysystem\Config;
 use League\Flysystem\FileAttributes;
 use League\Flysystem\FilesystemAdapter;
+use League\Flysystem\UnableToDeleteFile;
 use League\Flysystem\UnableToWriteFile;
 use Volc\Service\ImageX;
 
@@ -88,7 +89,11 @@ class ImageXAdapter implements FilesystemAdapter
             "query" => $commitParams,
             "json" => $commitBody,
         ];
-        $response = $this->client->commitUploadImage($commitReq);
+
+        $response = json_decode($this->client->commitUploadImage($commitReq), true);
+        if (isset($response["ResponseMetadata"]["Error"])) {
+            throw new UnableToWriteFile(sprintf("uploadImages: request id %s error %s", $response["ResponseMetadata"]["RequestId"], $response["ResponseMetadata"]["Error"]["Message"]));
+        }
     }
 
     public function writeStream(string $path, $contents, Config $config): void
@@ -110,8 +115,10 @@ class ImageXAdapter implements FilesystemAdapter
 
     public function delete(string $path): void
     {
-        // TODO: Implement delete() method.
-        throw new NotImplementedException();
+        $response = json_decode($this->client->deleteImages($this->serviceId, [$path]), true);
+        if (isset($response["ResponseMetadata"]["Error"])) {
+            throw new UnableToDeleteFile(sprintf("deleteImages: request id %s error %s", $response["ResponseMetadata"]["RequestId"], $response["ResponseMetadata"]["Error"]["Message"]));
+        }
     }
 
     public function deleteDirectory(string $path): void
