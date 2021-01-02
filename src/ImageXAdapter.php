@@ -24,6 +24,11 @@ class ImageXAdapter implements FilesystemAdapter
      */
     private $config;
 
+    /**
+     * @var string Resources uri Prefix
+     */
+    private $uriPrefix;
+
 
     public function __construct(ImageXConfig $config){
         $this->client = ImageX::getInstance($config->region);
@@ -31,15 +36,16 @@ class ImageXAdapter implements FilesystemAdapter
         $this->client->setSecretKey($config->secretKey);
 
         $this->config = $config;
+        $this->uriPrefix = $this->imageXBuildUriPrefix();
     }
 
     /**
-     * Generate the uri Prefix for deleting operation.
+     * Generate the uri Prefix
      *
      * @return string
      * @throws \Exception
      */
-    function imageXBuildDeleteUriPrefix()
+    function imageXBuildUriPrefix()
     {
         $prefix = '';
         switch ($this->config->region) {
@@ -134,19 +140,21 @@ class ImageXAdapter implements FilesystemAdapter
 
     public function read(string $path): string
     {
-        // TODO: Implement read() method.
-        throw new NotImplementedException();
+        $httpClient = new Client();
+        $url = $this->config->domain. '/'. $this->uriPrefix. '/'. $path;
+        return $httpClient->get($url)->getBody()->getContents();
     }
 
     public function readStream(string $path)
     {
-        // TODO: Implement readStream() method.
-        throw new NotImplementedException();
+        $httpClient = new Client();
+        $url = $this->config->domain. '/'. $this->uriPrefix. '/'. $path;
+        return $httpClient->get($url)->getBody()->detach();
     }
 
     public function delete(string $path): void
     {
-        $path = $this->imageXBuildDeleteUriPrefix() . '/' . $path;
+        $path = $this->uriPrefix . '/' . $path;
         $response = json_decode($this->client->deleteImages($this->config->serviceId, [$path]), true);
         if (isset($response["ResponseMetadata"]["Error"])) {
             throw new UnableToDeleteFile(sprintf("deleteImages: request id %s error %s", $response["ResponseMetadata"]["RequestId"], $response["ResponseMetadata"]["Error"]["Message"]));

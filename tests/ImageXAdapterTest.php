@@ -2,8 +2,8 @@
 
 namespace ExerciseBook\Flysystem\ImageX\Test;
 
-use ExerciseBook\Flysystem\ImageX\ImageXAdapter;
 use ExerciseBook\Flysystem\ImageX\Exception\NotImplementedException;
+use ExerciseBook\Flysystem\ImageX\ImageXAdapter;
 use League\Flysystem\Config as FlysystemConfig;
 use League\Flysystem\UnableToDeleteFile;
 use PHPUnit\Framework\TestCase;
@@ -48,19 +48,23 @@ class ImageXAdapterTest extends TestCase
 
     public function testReadStream()
     {
-        $this->expectException(NotImplementedException::class);
+        $expectedContents = fopen('resources/ori.jpg', 'rb');
+        $actualContent = $this->adapter->readStream('test/ori_stream.jpg');
+
+        $this->assertEquals(stream_get_contents($expectedContents), stream_get_contents($actualContent));
+
+        fclose($expectedContents);
     }
 
     public function testRead()
     {
-        $this->expectException(NotImplementedException::class);
-
+        $content = $this->adapter->read('test/test.txt');
+        $this->assertEquals('1145141919810', $content);
     }
 
     public function testListContents()
     {
         $this->expectException(NotImplementedException::class);
-
     }
 
     public function testCreateDirectory()
@@ -71,7 +75,6 @@ class ImageXAdapterTest extends TestCase
     public function testMimeType()
     {
         $this->expectException(NotImplementedException::class);
-
     }
 
     public function testDeleteNonExistentFile()
@@ -92,19 +95,16 @@ class ImageXAdapterTest extends TestCase
     public function testSetVisibility()
     {
         $this->assertTrue(true);
-
     }
 
     public function testLastModified()
     {
         $this->expectException(NotImplementedException::class);
-
     }
 
     public function testVisibility()
     {
         $this->expectException(NotImplementedException::class);
-
     }
 
     public function testFileExists()
@@ -128,6 +128,5 @@ class ImageXAdapterTest extends TestCase
     public function testMove()
     {
         $this->expectException(NotImplementedException::class);
-
     }
 }
