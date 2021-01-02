@@ -43,6 +43,7 @@ class ImageXAdapterTest extends TestCase
 
     public function testDeleteDirectory()
     {
+        // There is no directory operation for ImageX so far
         $this->assertTrue(true);
     }
 
@@ -64,17 +65,22 @@ class ImageXAdapterTest extends TestCase
 
     public function testListContents()
     {
+        // TODO
         $this->expectException(NotImplementedException::class);
+        throw(new NotImplementedException());
     }
 
     public function testCreateDirectory()
     {
+        // There is no directory operation for ImageX so far
         $this->assertTrue(true);
     }
 
     public function testMimeType()
     {
+        // TODO
         $this->expectException(NotImplementedException::class);
+        throw(new NotImplementedException());
     }
 
     public function testDeleteNonExistentFile()
@@ -94,39 +100,49 @@ class ImageXAdapterTest extends TestCase
 
     public function testSetVisibility()
     {
+        // There is no visibility operation for ImageX so far
         $this->assertTrue(true);
     }
 
     public function testLastModified()
     {
+        // TODO
         $this->expectException(NotImplementedException::class);
+        throw(new NotImplementedException());
     }
 
     public function testVisibility()
     {
+        // TODO
         $this->expectException(NotImplementedException::class);
+        throw(new NotImplementedException());
     }
 
     public function testFileExists()
     {
+        // TODO
         $this->expectException(NotImplementedException::class);
-
+        throw(new NotImplementedException());
     }
 
     public function testCopy()
     {
+        // TODO
         $this->expectException(NotImplementedException::class);
-
+        throw(new NotImplementedException());
     }
 
     public function testFileSize()
     {
+        // TODO
         $this->expectException(NotImplementedException::class);
-
+        throw(new NotImplementedException());
     }
 
     public function testMove()
     {
+        // TODO
         $this->expectException(NotImplementedException::class);
+        throw(new NotImplementedException());
     }
 }
