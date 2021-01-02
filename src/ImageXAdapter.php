@@ -15,17 +15,65 @@ class ImageXAdapter implements FilesystemAdapter
 {
 
     /**
-     * @var ImageX
+     * @var ImageX ImageX客户端实例
      */
     private $client;
 
+    /**
+     * @var string 地域
+     */
+    private $region;
+
+    /**
+     * @var string
+     */
+    private $accessKey;
+
+    /**
+     * @var string
+     */
+    private $secretKey;
+
+    /**
+     * @var string 服务编号
+     */
     private $serviceId;
+
 
     public function __construct(string $region, string $accessKey, string $secretKey, string $serviceId){
         $this->client = ImageX::getInstance($region);
         $this->client->setAccessKey($accessKey);
         $this->client->setSecretKey($secretKey);
+
+        $this->region = $region;
+        $this->accessKey = $accessKey;
+        $this->secretKey = $secretKey;
         $this->serviceId = $serviceId;
+    }
+
+    /**
+     * 生成删除文件的 uri 前缀
+     *
+     * @return string
+     * @throws \Exception
+     */
+    function imageXBuildDeleteUriPrefix()
+    {
+        $prefix = '';
+        switch ($this->region) {
+            case 'cn-north-1':
+                $prefix = 'tos-cn-i-';
+                break;
+            case 'us-east-1':
+                $prefix = 'tos-us-i-';
+                break;
+            case 'ap-singapore-1':
+                $prefix = 'tos-ap-i-';
+                break;
+            default:
+                throw new \Exception(sprintf("ImageX not support region, %s", $this->region));
+        }
+        return $prefix. $this->serviceId;
     }
 
     public function fileExists(string $path): bool
@@ -115,6 +163,7 @@ class ImageXAdapter implements FilesystemAdapter
 
     public function delete(string $path): void
     {
+        $path = $this->imageXBuildDeleteUriPrefix() . '/' . $path;
         $response = json_decode($this->client->deleteImages($this->serviceId, [$path]), true);
         if (isset($response["ResponseMetadata"]["Error"])) {
             throw new UnableToDeleteFile(sprintf("deleteImages: request id %s error %s", $response["ResponseMetadata"]["RequestId"], $response["ResponseMetadata"]["Error"]["Message"]));

@@ -87,6 +87,8 @@ class ImageXAdapterTest extends TestCase
 
     public function testDelete()
     {
+        $this->adapter->delete('test/test.txt');
+        $this->adapter->delete('test/ori.jpg');
         $this->adapter->delete('test/ori_stream.jpg');
         $this->assertTrue(true);
     }
