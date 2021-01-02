@@ -153,24 +153,6 @@ class ImageXAdapter implements FilesystemAdapter
         }
     }
 
-    public function deleteDirectory(string $path): void
-    {
-        // TODO: Implement deleteDirectory() method.
-        throw new NotImplementedException();
-    }
-
-    public function createDirectory(string $path, Config $config): void
-    {
-        // TODO: Implement createDirectory() method.
-        throw new NotImplementedException();
-    }
-
-    public function setVisibility(string $path, string $visibility): void
-    {
-        // TODO: Implement setVisibility() method.
-        throw new NotImplementedException();
-    }
-
     public function visibility(string $path): FileAttributes
     {
         // TODO: Implement visibility() method.
@@ -211,5 +193,20 @@ class ImageXAdapter implements FilesystemAdapter
     {
         // TODO: Implement copy() method.
         throw new NotImplementedException();
+    }
+
+    public function deleteDirectory(string $path): void
+    {
+        // There is no directory operation for ImageX so far
+    }
+
+    public function createDirectory(string $path, Config $config): void
+    {
+        // There is no directory operation for ImageX so far
+    }
+
+    public function setVisibility(string $path, string $visibility): void
+    {
+        // There is no visibility operation for ImageX so far
     }
 }
