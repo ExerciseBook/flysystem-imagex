@@ -19,8 +19,7 @@ class ImageXAdapterTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->adapter = new ImagexAdapter(Config::$imageXRegion, Config::$accessKey, Config::$secretKey,
-            Config::$imageXServiceId);
+        $this->adapter = new ImagexAdapter(new Config());
     }
 
     public function testWrite()

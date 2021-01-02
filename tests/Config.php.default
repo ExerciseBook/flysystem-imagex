@@ -2,13 +2,17 @@
 
 namespace ExerciseBook\Flysystem\ImageX\Test;
 
-class Config
+use ExerciseBook\Flysystem\ImageX\ImageXConfig;
+
+class Config extends ImageXConfig
 {
-    static public $accessKey = 'Access Key';
+    public $region = 'Region';
 
-    static public $secretKey = 'Secret Key';
+    public $accessKey = 'Access Key';
 
-    static public $imageXRegion = 'cn-north-1';
+    public $secretKey = 'Secret Key';
 
-    static public $imageXServiceId = 'Service ID';
+    public $serviceId = 'Service ID';
+
+    public $domain = 'Binding Domain';
 }

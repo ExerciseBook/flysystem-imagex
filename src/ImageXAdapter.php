@@ -15,44 +15,26 @@ class ImageXAdapter implements FilesystemAdapter
 {
 
     /**
-     * @var ImageX ImageX客户端实例
+     * @var ImageX ImageX Client Instance
      */
     private $client;
 
     /**
-     * @var string 地域
+     * @var ImageXConfig ImageX Client Settings
      */
-    private $region;
-
-    /**
-     * @var string
-     */
-    private $accessKey;
-
-    /**
-     * @var string
-     */
-    private $secretKey;
-
-    /**
-     * @var string 服务编号
-     */
-    private $serviceId;
+    private $config;
 
 
-    public function __construct(string $region, string $accessKey, string $secretKey, string $serviceId){
-        $this->client = ImageX::getInstance($region);
-        $this->client->setAccessKey($accessKey);
-        $this->client->setSecretKey($secretKey);
+    public function __construct(ImageXConfig $config){
+        $this->client = ImageX::getInstance($config->region);
+        $this->client->setAccessKey($config->accessKey);
+        $this->client->setSecretKey($config->secretKey);
 
-        $this->region = $region;
-        $this->accessKey = $accessKey;
-        $this->secretKey = $secretKey;
-        $this->serviceId = $serviceId;
+        $this->config = $config;
     }
 
     /**
-     * 生成删除文件的 uri 前缀
+     * Generate the uri Prefix for deleting operation.
      *
      * @return string
      * @throws \Exception
@@ -60,7 +42,7 @@ class ImageXAdapter implements FilesystemAdapter
     function imageXBuildDeleteUriPrefix()
     {
         $prefix = '';
-        switch ($this->region) {
+        switch ($this->config->region) {
             case 'cn-north-1':
                 $prefix = 'tos-cn-i-';
                 break;
@@ -71,10 +53,11 @@ class ImageXAdapter implements FilesystemAdapter
                 $prefix = 'tos-ap-i-';
                 break;
             default:
-                throw new \Exception(sprintf("ImageX not support region, %s", $this->region));
+                throw new \Exception(sprintf("ImageX not support region, %s", $this->config->region));
         }
-        return $prefix. $this->serviceId;
+        return $prefix. $this->config->serviceId;
     }
+
 
     public function fileExists(string $path): bool
     {
@@ -88,7 +71,7 @@ class ImageXAdapter implements FilesystemAdapter
         $applyParams = [];
         $applyParams["Action"] = "ApplyImageUpload";
         $applyParams["Version"] = "2018-08-01";
-        $applyParams["ServiceId"] = $this->serviceId;
+        $applyParams["ServiceId"] = $this->config->serviceId;
         $applyParams["UploadNum"] = 1;
         $applyParams["StoreKeys"] = array();
         $queryStr = http_build_query($applyParams);
@@ -130,7 +113,7 @@ class ImageXAdapter implements FilesystemAdapter
 
         // Commit
         $commitParams = [];
-        $commitParams["ServiceId"] = $this->serviceId;
+        $commitParams["ServiceId"] = $this->config->serviceId;
         $commitBody = [];
         $commitBody["SessionKey"] = $uploadAddr['SessionKey'];
         $commitReq = [
@@ -164,7 +147,7 @@ class ImageXAdapter implements FilesystemAdapter
     public function delete(string $path): void
     {
         $path = $this->imageXBuildDeleteUriPrefix() . '/' . $path;
-        $response = json_decode($this->client->deleteImages($this->serviceId, [$path]), true);
+        $response = json_decode($this->client->deleteImages($this->config->serviceId, [$path]), true);
         if (isset($response["ResponseMetadata"]["Error"])) {
             throw new UnableToDeleteFile(sprintf("deleteImages: request id %s error %s", $response["ResponseMetadata"]["RequestId"], $response["ResponseMetadata"]["Error"]["Message"]));
         }
