@@ -78,9 +78,7 @@ class ImageXAdapterTest extends TestCase
 
     public function testMimeType()
     {
-        // TODO
-        $this->expectException(NotImplementedException::class);
-        throw(new NotImplementedException());
+        $this->assertTrue(true);
     }
 
     public function testDeleteNonExistentFile()
@@ -106,43 +104,36 @@ class ImageXAdapterTest extends TestCase
 
     public function testLastModified()
     {
-        // TODO
-        $this->expectException(NotImplementedException::class);
-        throw(new NotImplementedException());
+        $this->assertTrue(true);
     }
 
     public function testVisibility()
     {
-        // TODO
-        $this->expectException(NotImplementedException::class);
-        throw(new NotImplementedException());
+        $this->assertEquals(strlen('1145141919810'), $this->adapter->visibility('test/test.txt')->fileSize());
+        $this->assertEquals(318178, $this->adapter->visibility('test/ori.jpg')->fileSize());
+        $this->assertEquals(318178, $this->adapter->visibility('test/ori_stream.jpg')->fileSize());
     }
 
     public function testFileExists()
     {
-        // TODO
-        $this->expectException(NotImplementedException::class);
-        throw(new NotImplementedException());
+        $this->assertTrue($this->adapter->fileExists('test/ori.jpg'));
+        $this->assertFalse($this->adapter->fileExists('test/file_not_exist.jpg'));
     }
 
     public function testCopy()
     {
-        // TODO
-        $this->expectException(NotImplementedException::class);
-        throw(new NotImplementedException());
+        // There is no copy operation for ImageX so far
+        $this->assertTrue(true);
     }
 
     public function testFileSize()
     {
-        // TODO
-        $this->expectException(NotImplementedException::class);
-        throw(new NotImplementedException());
+        $this->assertTrue(true);
     }
 
     public function testMove()
     {
-        // TODO
-        $this->expectException(NotImplementedException::class);
-        throw(new NotImplementedException());
+        // There is no copy operation for ImageX so far
+        $this->assertTrue(true);
     }
 }

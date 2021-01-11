@@ -7,7 +7,9 @@ use GuzzleHttp\Client;
 use League\Flysystem\Config;
 use League\Flysystem\FileAttributes;
 use League\Flysystem\FilesystemAdapter;
+use League\Flysystem\UnableToCheckFileExistence;
 use League\Flysystem\UnableToDeleteFile;
+use League\Flysystem\UnableToRetrieveMetadata;
 use League\Flysystem\UnableToWriteFile;
 use Volc\Service\ImageX;
 
@@ -64,11 +66,31 @@ class ImageXAdapter implements FilesystemAdapter
         return $prefix. $this->config->serviceId;
     }
 
+    private function getFileMetadata(string $path) {
+        $path = $this->uriPrefix . '/' . $path;
+        $response = json_decode($this->client->getImageUploadFile($this->config->serviceId, $path), true);
+
+        if (isset($response["ResponseMetadata"]["Error"])) {
+            $error = $response["ResponseMetadata"]["Error"];
+            if ($error['CodeN'] == 604006) {
+                throw UnableToRetrieveMetadata::create($path, "any", $error['Message']);
+            } else {
+                throw UnableToCheckFileExistence::forLocation($path);
+            }
+        }
+
+        $data = $response['Result'];
+        return new FileAttributes($data['FileName'], $data['FileSize'], null, strtotime($data['LastModified']), null, $data);
+    }
 
     public function fileExists(string $path): bool
     {
-        // TODO: Implement fileExists() method.
-        throw new NotImplementedException();
+        try {
+            $response = $this->getFileMetadata($path);
+        } catch (UnableToRetrieveMetadata $e) {
+            return false;
+        }
+        return true;
     }
 
     public function write(string $path, string $contents, Config $config): void
@@ -163,44 +185,43 @@ class ImageXAdapter implements FilesystemAdapter
 
     public function visibility(string $path): FileAttributes
     {
-        // TODO: Implement visibility() method.
-        throw new NotImplementedException();
+        return $this->getFileMetadata($path);
+//        throw UnableToRetrieveMetadata::visibility($path, error_get_last()['message'] ?? '');
     }
 
     public function mimeType(string $path): FileAttributes
     {
-        // TODO: Implement mimeType() method.
-        throw new NotImplementedException();
+        return $this->getFileMetadata($path);
+//        throw UnableToRetrieveMetadata::mimeType($path, error_get_last()['message'] ?? '');
     }
 
     public function lastModified(string $path): FileAttributes
     {
-        // TODO: Implement lastModified() method.
-        throw new NotImplementedException();
+        return $this->getFileMetadata($path);
+//        throw UnableToRetrieveMetadata::lastModified($path, error_get_last()['message'] ?? '');
     }
 
     public function fileSize(string $path): FileAttributes
     {
-        // TODO: Implement fileSize() method.
-        throw new NotImplementedException();
+        return $this->getFileMetadata($path);
+//        throw UnableToRetrieveMetadata::fileSize($path, error_get_last()['message'] ?? '');
     }
 
     public function listContents(string $path, bool $deep): iterable
     {
-        // TODO: Implement listContents() method.
-        throw new NotImplementedException();
+        $response = json_decode($this->client->getImageUploadFiles($this->config->serviceId, $path), true);
+
+        return null;
     }
 
     public function move(string $source, string $destination, Config $config): void
     {
-        // TODO: Implement move() method.
-        throw new NotImplementedException();
+        // There is no move operation for ImageX so far
     }
 
     public function copy(string $source, string $destination, Config $config): void
     {
-        // TODO: Implement copy() method.
-        throw new NotImplementedException();
+        // There is no copy operation for ImageX so far
     }
 
     public function deleteDirectory(string $path): void
