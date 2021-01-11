@@ -9,6 +9,7 @@ use League\Flysystem\FileAttributes;
 use League\Flysystem\FilesystemAdapter;
 use League\Flysystem\UnableToCheckFileExistence;
 use League\Flysystem\UnableToDeleteFile;
+use League\Flysystem\UnableToReadFile;
 use League\Flysystem\UnableToRetrieveMetadata;
 use League\Flysystem\UnableToWriteFile;
 use Volc\Service\ImageX;
@@ -162,6 +163,10 @@ class ImageXAdapter implements FilesystemAdapter
 
     public function read(string $path): string
     {
+        if (!$this->fileExists($path)) {
+            throw UnableToReadFile::fromLocation($path);
+        }
+
         $httpClient = new Client();
         $url = $this->config->domain. '/'. $this->uriPrefix. '/'. $path;
         return $httpClient->get($url)->getBody()->getContents();
@@ -169,6 +174,10 @@ class ImageXAdapter implements FilesystemAdapter
 
     public function readStream(string $path)
     {
+        if (!$this->fileExists($path)) {
+            throw UnableToReadFile::fromLocation($path);
+        }
+
         $httpClient = new Client();
         $url = $this->config->domain. '/'. $this->uriPrefix. '/'. $path;
         return $httpClient->get($url)->getBody()->detach();

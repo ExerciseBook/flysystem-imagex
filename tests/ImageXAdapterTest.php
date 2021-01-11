@@ -41,10 +41,36 @@ class ImageXAdapterTest extends TestCase
         $this->assertTrue(true);
     }
 
-    public function testDeleteDirectory()
+    public function testListContents()
     {
-        // There is no directory operation for ImageX so far
-        $this->assertTrue(true);
+        // TODO
+        $this->expectException(NotImplementedException::class);
+        throw(new NotImplementedException());
+    }
+
+    public function testVisibility()
+    {
+//        $this->assertEquals(strlen('1145141919810'), $this->adapter->visibility('test/test.txt')->fileSize());
+        $this->assertEquals(318178, $this->adapter->visibility('test/ori.jpg')->fileSize());
+        $this->assertEquals(318178, $this->adapter->visibility('test/ori_stream.jpg')->fileSize());
+    }
+
+    public function testFileExists()
+    {
+        $this->assertTrue($this->adapter->fileExists('test/ori.jpg'));
+        $this->assertFalse($this->adapter->fileExists('test/file_not_exist.jpg'));
+    }
+
+    public function testRead()
+    {
+        $content = $this->adapter->read('test/test.txt');
+        $this->assertEquals('1145141919810', $content);
+    }
+
+    public function testReadNonExistentFile()
+    {
+        $this->adapter->delete('test/non_existent_file.jpg');
+        $this->expectException(UnableToDeleteFile::class);
     }
 
     public function testReadStream()
@@ -55,30 +81,6 @@ class ImageXAdapterTest extends TestCase
         $this->assertEquals(stream_get_contents($expectedContents), stream_get_contents($actualContent));
 
         fclose($expectedContents);
-    }
-
-    public function testRead()
-    {
-        $content = $this->adapter->read('test/test.txt');
-        $this->assertEquals('1145141919810', $content);
-    }
-
-    public function testListContents()
-    {
-        // TODO
-        $this->expectException(NotImplementedException::class);
-        throw(new NotImplementedException());
-    }
-
-    public function testCreateDirectory()
-    {
-        // There is no directory operation for ImageX so far
-        $this->assertTrue(true);
-    }
-
-    public function testMimeType()
-    {
-        $this->assertTrue(true);
     }
 
     public function testDeleteNonExistentFile()
@@ -96,33 +98,8 @@ class ImageXAdapterTest extends TestCase
         $this->assertTrue(true);
     }
 
-    public function testSetVisibility()
+    public function testMimeType()
     {
-        // There is no visibility operation for ImageX so far
-        $this->assertTrue(true);
-    }
-
-    public function testLastModified()
-    {
-        $this->assertTrue(true);
-    }
-
-    public function testVisibility()
-    {
-        $this->assertEquals(strlen('1145141919810'), $this->adapter->visibility('test/test.txt')->fileSize());
-        $this->assertEquals(318178, $this->adapter->visibility('test/ori.jpg')->fileSize());
-        $this->assertEquals(318178, $this->adapter->visibility('test/ori_stream.jpg')->fileSize());
-    }
-
-    public function testFileExists()
-    {
-        $this->assertTrue($this->adapter->fileExists('test/ori.jpg'));
-        $this->assertFalse($this->adapter->fileExists('test/file_not_exist.jpg'));
-    }
-
-    public function testCopy()
-    {
-        // There is no copy operation for ImageX so far
         $this->assertTrue(true);
     }
 
@@ -131,9 +108,39 @@ class ImageXAdapterTest extends TestCase
         $this->assertTrue(true);
     }
 
+    public function testLastModified()
+    {
+        $this->assertTrue(true);
+    }
+
+    public function testSetVisibility()
+    {
+        // There is no visibility operation for ImageX so far
+        $this->assertTrue(true);
+    }
+
+    public function testCopy()
+    {
+        // There is no copy operation for ImageX so far
+        $this->assertTrue(true);
+    }
+
     public function testMove()
     {
         // There is no copy operation for ImageX so far
         $this->assertTrue(true);
     }
+
+    public function testCreateDirectory()
+    {
+        // There is no directory operation for ImageX so far
+        $this->assertTrue(true);
+    }
+
+    public function testDeleteDirectory()
+    {
+        // There is no directory operation for ImageX so far
+        $this->assertTrue(true);
+    }
+
 }
