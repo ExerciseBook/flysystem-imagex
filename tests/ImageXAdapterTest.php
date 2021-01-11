@@ -2,9 +2,9 @@
 
 namespace ExerciseBook\Flysystem\ImageX\Test;
 
-use ExerciseBook\Flysystem\ImageX\Exception\NotImplementedException;
 use ExerciseBook\Flysystem\ImageX\ImageXAdapter;
 use League\Flysystem\Config as FlysystemConfig;
+use League\Flysystem\FileAttributes;
 use League\Flysystem\UnableToDeleteFile;
 use PHPUnit\Framework\TestCase;
 
@@ -43,9 +43,27 @@ class ImageXAdapterTest extends TestCase
 
     public function testListContents()
     {
-        // TODO
-        $this->expectException(NotImplementedException::class);
-        throw(new NotImplementedException());
+        $response = $this->adapter->listContents('test/', true);
+
+        $map = [
+            'test/ori.jpg' => false,
+            'test/ori_stream.jpg' => false,
+            'test/test.txt' => false
+        ];
+
+        foreach ($response as $file) {
+            if ($file instanceof FileAttributes) {
+                if (isset($map[$file->path()])) {
+                    $map[$file->path()] = true;
+                }
+            }
+        }
+
+        $result = true;
+        foreach ($map as $key => $value) {
+            $result = $result && $value;
+        }
+        $this->assertTrue($result);
     }
 
     public function testVisibility()
@@ -69,8 +87,8 @@ class ImageXAdapterTest extends TestCase
 
     public function testReadNonExistentFile()
     {
-        $this->adapter->delete('test/non_existent_file.jpg');
         $this->expectException(UnableToDeleteFile::class);
+        $this->adapter->delete('test/non_existent_file.jpg');
     }
 
     public function testReadStream()

@@ -218,9 +218,28 @@ class ImageXAdapter implements FilesystemAdapter
 
     public function listContents(string $path, bool $deep): iterable
     {
-        $response = json_decode($this->client->getImageUploadFiles($this->config->serviceId, $path), true);
+        $path = trim($path, '/\\');
 
-        return null;
+        $continue = true;
+        $offset = 0;
+        while ($continue) {
+            $response = json_decode($this->client->getImageUploadFiles($this->config->serviceId, $path, $offset, 100, 0), true);
+
+            if (isset($response["ResponseMetadata"]["Error"])) {
+                break;
+            }
+
+            $result = $response['Result'];
+
+            $fileObjects = $result['FileObjects'];
+            foreach ($fileObjects as $data) {
+                yield new FileAttributes($data['FileName'], $data['FileSize'], null, strtotime($data['LastModified']), null, $data);
+            }
+
+            $offset += 100;
+            $continue = $result['hasMore'];
+        }
+
     }
 
     public function move(string $source, string $destination, Config $config): void
