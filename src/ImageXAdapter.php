@@ -67,9 +67,61 @@ class ImageXAdapter implements FilesystemAdapter
         return $prefix. $this->config->serviceId;
     }
 
+    /**
+     * ImageX Interface getImageUploadFiles
+     *
+     * @param string|null $fNamePrefix
+     * @param int $offset
+     * @param int $limit
+     * @param int $marker
+     * @return string
+     */
+    public function getImageUploadFiles(string $fNamePrefix = null, int $offset = 0, int $limit = 1, int $marker = 0)
+    {
+        $applyParams = [];
+        $applyParams["Action"] = "GetImageUploadFiles";
+        $applyParams["Version"] = "2018-08-01";
+        $applyParams["ServiceId"] = $this->config->serviceId;
+
+        if ($fNamePrefix != null) $applyParams["FnamePrefix"] = $fNamePrefix;
+        $applyParams["Offset"] = $offset;
+        $applyParams["Limit"] = $limit;
+        $applyParams["Marker"] = $marker;
+
+        $queryStr = http_build_query($applyParams);
+
+        return $response = $this->client->requestImageX('GetImageUploadFiles', ['query' => $queryStr]);
+    }
+
+    /**
+     * ImageX Interface getImageUploadFile
+     *
+     * @param string|null $storeUri
+     * @return string
+     */
+    public function getImageUploadFile(string $storeUri = null)
+    {
+        $applyParams = [];
+        $applyParams["Action"] = "GetImageUploadFile";
+        $applyParams["Version"] = "2018-08-01";
+        $applyParams["ServiceId"] = $this->config->serviceId;
+
+        $applyParams["StoreUri"] = $storeUri;
+
+        $queryStr = http_build_query($applyParams);
+
+        return $response = $this->client->requestImageX('GetImageUploadFile', ['query' => $queryStr]);
+    }
+
+    /**
+     * FlySystem metadata helper
+     *
+     * @param string $path
+     * @return FileAttributes
+     */
     private function getFileMetadata(string $path) {
         $path = $this->uriPrefix . '/' . $path;
-        $response = json_decode($this->client->getImageUploadFile($this->config->serviceId, $path), true);
+        $response = json_decode($this->getImageUploadFile($path), true);
 
         if (isset($response["ResponseMetadata"]["Error"])) {
             $error = $response["ResponseMetadata"]["Error"];
@@ -223,7 +275,7 @@ class ImageXAdapter implements FilesystemAdapter
         $continue = true;
         $offset = 0;
         while ($continue) {
-            $response = json_decode($this->client->getImageUploadFiles($this->config->serviceId, $path, $offset, 100, 0), true);
+            $response = json_decode($this->getImageUploadFiles($path, $offset, 100, 0), true);
 
             if (isset($response["ResponseMetadata"]["Error"])) {
                 break;
