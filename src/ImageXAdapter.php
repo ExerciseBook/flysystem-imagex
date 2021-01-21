@@ -2,7 +2,6 @@
 
 namespace ExerciseBook\Flysystem\ImageX;
 
-use ExerciseBook\Flysystem\ImageX\Exception\NotImplementedException;
 use GuzzleHttp\Client;
 use League\Flysystem\Config;
 use League\Flysystem\FileAttributes;
@@ -32,14 +31,30 @@ class ImageXAdapter implements FilesystemAdapter
      */
     private $uriPrefix;
 
+    public function __construct($config)
+    {
+        if ($config instanceof ImageXConfig) {
+            $this->client = ImageX::getInstance($config->region);
+            $this->client->setAccessKey($config->accessKey);
+            $this->client->setSecretKey($config->secretKey);
 
-    public function __construct(ImageXConfig $config){
-        $this->client = ImageX::getInstance($config->region);
-        $this->client->setAccessKey($config->accessKey);
-        $this->client->setSecretKey($config->secretKey);
+            $this->config = $config;
+            $this->uriPrefix = $this->imageXBuildUriPrefix();
+        } else if (is_array($config)) {
+            $this->config = new ImageXConfig();
 
-        $this->config = $config;
-        $this->uriPrefix = $this->imageXBuildUriPrefix();
+            $this->config->region = $config["region"];
+            $this->config->accessKey = $config["access_key"];
+            $this->config->secretKey = $config["secret_key"];
+            $this->config->serviceId = $config["service_id"];
+            $this->config->domain = $config["region"];
+
+            $this->client = ImageX::getInstance($this->config->region);
+            $this->client->setAccessKey($this->config->accessKey);
+            $this->client->setSecretKey($this->config->secretKey);
+
+            $this->uriPrefix = $this->imageXBuildUriPrefix();
+        } else throw new \InvalidArgumentException("Config not supported.");
     }
 
     /**
@@ -64,7 +79,7 @@ class ImageXAdapter implements FilesystemAdapter
             default:
                 throw new \Exception(sprintf("ImageX not support region, %s", $this->config->region));
         }
-        return $prefix. $this->config->serviceId;
+        return $prefix . $this->config->serviceId;
     }
 
     /**
@@ -119,7 +134,8 @@ class ImageXAdapter implements FilesystemAdapter
      * @param string $path
      * @return FileAttributes
      */
-    private function getFileMetadata(string $path) {
+    private function getFileMetadata(string $path)
+    {
         $path = $this->uriPrefix . '/' . $path;
         $response = json_decode($this->getImageUploadFile($path), true);
 
@@ -182,12 +198,12 @@ class ImageXAdapter implements FilesystemAdapter
         ]);
         $response = $tosClient->request('PUT',
             $uploadAddr['StoreInfos'][0]["StoreUri"],
-            [   "body" => $contents,
+            ["body" => $contents,
                 "headers" =>
                     ['Authorization' => $uploadAddr['StoreInfos'][0]["Auth"],
-                    'Content-CRC32' => $crc32]
+                        'Content-CRC32' => $crc32]
             ]);
-        $uploadResponse = json_decode((string) $response->getBody(), true);
+        $uploadResponse = json_decode((string)$response->getBody(), true);
         if (!isset($uploadResponse["success"]) || $uploadResponse["success"] != 0) {
             throw new UnableToWriteFile("upload " . $path . " error");
         }
@@ -220,7 +236,7 @@ class ImageXAdapter implements FilesystemAdapter
         }
 
         $httpClient = new Client();
-        $url = $this->config->domain. '/'. $this->uriPrefix. '/'. $path;
+        $url = $this->config->domain . '/' . $this->uriPrefix . '/' . $path;
         return $httpClient->get($url)->getBody()->getContents();
     }
 
@@ -231,7 +247,7 @@ class ImageXAdapter implements FilesystemAdapter
         }
 
         $httpClient = new Client();
-        $url = $this->config->domain. '/'. $this->uriPrefix. '/'. $path;
+        $url = $this->config->domain . '/' . $this->uriPrefix . '/' . $path;
         return $httpClient->get($url)->getBody()->detach();
     }
 
