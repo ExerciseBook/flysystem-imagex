@@ -19,7 +19,7 @@
         "phpunit/phpunit": "9.5.x-dev"
     },
     "license": "MIT",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "minimum-stability": "alpha",
     "autoload": {
         "psr-4": {

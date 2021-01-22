@@ -47,7 +47,7 @@ class ImageXAdapter implements FilesystemAdapter
             $this->config->accessKey = $config["access_key"];
             $this->config->secretKey = $config["secret_key"];
             $this->config->serviceId = $config["service_id"];
-            $this->config->domain = $config["region"];
+            $this->config->domain = $config["domain"];
 
             $this->client = ImageX::getInstance($this->config->region);
             $this->client->setAccessKey($this->config->accessKey);
