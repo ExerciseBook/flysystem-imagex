@@ -223,16 +223,9 @@ class ImageXAdapter extends AbstractAdapter implements CanOverwriteFiles
     {
         $path = $this->uriPrefix . '/' . $path;
         $response = json_decode($this->client->deleteImages($this->config->serviceId, [$path]), true);
-
         if (isset($response["ResponseMetadata"]["Error"])) {
-            $error = $response["ResponseMetadata"]["Error"];
-            if ($error['CodeN'] == 604006) {
-                throw new FileNotFoundException($path, "any", $error['Message']);
-            } else {
-                return false;
-            }
+            throw new FileNotFoundException($path);
         }
-
         return true;
     }
 
