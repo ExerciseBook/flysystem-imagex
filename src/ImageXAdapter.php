@@ -2,18 +2,15 @@
 
 namespace ExerciseBook\Flysystem\ImageX;
 
+use Composer\Downloader\FilesystemException;
 use GuzzleHttp\Client;
+use League\Flysystem\Adapter\AbstractAdapter;
+use League\Flysystem\Adapter\CanOverwriteFiles;
 use League\Flysystem\Config;
-use League\Flysystem\FileAttributes;
-use League\Flysystem\FilesystemAdapter;
-use League\Flysystem\UnableToCheckFileExistence;
-use League\Flysystem\UnableToDeleteFile;
-use League\Flysystem\UnableToReadFile;
-use League\Flysystem\UnableToRetrieveMetadata;
-use League\Flysystem\UnableToWriteFile;
+use League\Flysystem\FileNotFoundException;
 use Volc\Service\ImageX;
 
-class ImageXAdapter implements FilesystemAdapter
+class ImageXAdapter extends AbstractAdapter implements CanOverwriteFiles
 {
 
     /**
@@ -47,7 +44,7 @@ class ImageXAdapter implements FilesystemAdapter
             $this->config->accessKey = $config["access_key"];
             $this->config->secretKey = $config["secret_key"];
             $this->config->serviceId = $config["service_id"];
-            $this->config->domain = $config["region"];
+            $this->config->domain = $config["domain"];
 
             $this->client = ImageX::getInstance($this->config->region);
             $this->client->setAccessKey($this->config->accessKey);
@@ -128,41 +125,8 @@ class ImageXAdapter implements FilesystemAdapter
         return $response = $this->client->requestImageX('GetImageUploadFile', ['query' => $queryStr]);
     }
 
-    /**
-     * FlySystem metadata helper
-     *
-     * @param string $path
-     * @return FileAttributes
-     */
-    private function getFileMetadata(string $path)
-    {
-        $path = $this->uriPrefix . '/' . $path;
-        $response = json_decode($this->getImageUploadFile($path), true);
 
-        if (isset($response["ResponseMetadata"]["Error"])) {
-            $error = $response["ResponseMetadata"]["Error"];
-            if ($error['CodeN'] == 604006) {
-                throw UnableToRetrieveMetadata::create($path, "any", $error['Message']);
-            } else {
-                throw UnableToCheckFileExistence::forLocation($path);
-            }
-        }
-
-        $data = $response['Result'];
-        return new FileAttributes($data['FileName'], $data['FileSize'], null, strtotime($data['LastModified']), null, $data);
-    }
-
-    public function fileExists(string $path): bool
-    {
-        try {
-            $response = $this->getFileMetadata($path);
-        } catch (UnableToRetrieveMetadata $e) {
-            return false;
-        }
-        return true;
-    }
-
-    public function write(string $path, string $contents, Config $config): void
+    public function write($path, $contents, Config $config)
     {
         // Sign
         $applyParams = [];
@@ -178,16 +142,16 @@ class ImageXAdapter implements FilesystemAdapter
 
         $applyResponse = json_decode($response, true);
         if (isset($applyResponse["ResponseMetadata"]["Error"])) {
-            throw new UnableToWriteFile(sprintf("uploadImages: request id %s error %s", $applyResponse["ResponseMetadata"]["RequestId"], $applyResponse["ResponseMetadata"]["Error"]["Message"]));
+            throw new FilesystemException(sprintf("uploadImages: request id %s error %s", $applyResponse["ResponseMetadata"]["RequestId"], $applyResponse["ResponseMetadata"]["Error"]["Message"]));
         }
 
         $uploadAddr = $applyResponse['Result']['UploadAddress'];
         if (count($uploadAddr['UploadHosts']) == 0) {
-            throw new UnableToWriteFile("uploadImages: no upload host found");
+            throw new FilesystemException("uploadImages: no upload host found");
         }
         $uploadHost = $uploadAddr['UploadHosts'][0];
         if (count($uploadAddr['StoreInfos']) != 1) {
-            throw new UnableToWriteFile("uploadImages: store infos num != upload num");
+            throw new FilesystemException("uploadImages: store infos num != upload num");
         }
 
         // Upload
@@ -205,7 +169,7 @@ class ImageXAdapter implements FilesystemAdapter
             ]);
         $uploadResponse = json_decode((string)$response->getBody(), true);
         if (!isset($uploadResponse["success"]) || $uploadResponse["success"] != 0) {
-            throw new UnableToWriteFile("upload " . $path . " error");
+            throw new FilesystemException("upload " . $path . " error");
         }
 
         // Commit
@@ -220,19 +184,103 @@ class ImageXAdapter implements FilesystemAdapter
 
         $response = json_decode($this->client->commitUploadImage($commitReq), true);
         if (isset($response["ResponseMetadata"]["Error"])) {
-            throw new UnableToWriteFile(sprintf("uploadImages: request id %s error %s", $response["ResponseMetadata"]["RequestId"], $response["ResponseMetadata"]["Error"]["Message"]));
+            throw new FilesystemException(sprintf("uploadImages: request id %s error %s", $response["ResponseMetadata"]["RequestId"], $response["ResponseMetadata"]["Error"]["Message"]));
         }
+
+        // TODO 添加返回值
     }
 
-    public function writeStream(string $path, $contents, Config $config): void
+    public function writeStream($path, $resource, Config $config)
     {
-        $this->write($path, stream_get_contents($contents), $config);
+        return $this->write($path, stream_get_contents($resource), $config);
     }
 
-    public function read(string $path): string
+    public function update($path, $contents, Config $config)
     {
-        if (!$this->fileExists($path)) {
-            throw UnableToReadFile::fromLocation($path);
+        return $this->write($path, $contents, $config);
+    }
+
+    public function updateStream($path, $resource, Config $config)
+    {
+        return $this->write($path, stream_get_contents($resource), $config);
+    }
+
+    public function rename($path, $newpath)
+    {
+        if (!$this->copy($path, $newpath)) {
+            return false;
+        }
+
+        return $this->delete($path);
+    }
+
+    public function copy($path, $newpath)
+    {
+        return false;
+    }
+
+    public function delete($path)
+    {
+        $path = $this->uriPrefix . '/' . $path;
+        $response = json_decode($this->client->deleteImages($this->config->serviceId, [$path]), true);
+
+        if (isset($response["ResponseMetadata"]["Error"])) {
+            $error = $response["ResponseMetadata"]["Error"];
+            if ($error['CodeN'] == 604006) {
+                throw new FileNotFoundException($path, "any", $error['Message']);
+            } else {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public function deleteDir($dirname)
+    {
+        $len = strlen($dirname);
+        if ($len > 0) {
+            if ($dirname[$len - 1] != '/' && $dirname[$len - 1] != '\\') {
+                $dirname .= '/';
+            }
+        } else $dirname = '/';
+
+
+        return $this->delete($dirname);
+    }
+
+    public function createDir($dirname, Config $config)
+    {
+        $len = strlen($dirname);
+        if ($len > 0) {
+            if ($dirname[$len - 1] != '/' && $dirname[$len - 1] != '\\') {
+                $dirname .= '/';
+            }
+        } else $dirname = '/';
+
+        return $this->write($dirname, '', $config);
+    }
+
+    public function setVisibility($path, $visibility)
+    {
+        // ImageX did not support visibility
+        return true;
+    }
+
+    public function has($path)
+    {
+        try {
+            $response = $this->getMetadata($path);
+        } catch (FileNotFoundException $e) {
+            return false;
+        }
+        return true;
+    }
+
+    public function read($path)
+    {
+        if (!$this->has($path)) {
+            return false;
         }
 
         $httpClient = new Client();
@@ -240,10 +288,10 @@ class ImageXAdapter implements FilesystemAdapter
         return $httpClient->get($url)->getBody()->getContents();
     }
 
-    public function readStream(string $path)
+    public function readStream($path)
     {
-        if (!$this->fileExists($path)) {
-            throw UnableToReadFile::fromLocation($path);
+        if (!$this->has($path)) {
+            return false;
         }
 
         $httpClient = new Client();
@@ -251,42 +299,10 @@ class ImageXAdapter implements FilesystemAdapter
         return $httpClient->get($url)->getBody()->detach();
     }
 
-    public function delete(string $path): void
+    public function listContents($directory = '', $recursive = false)
     {
-        $path = $this->uriPrefix . '/' . $path;
-        $response = json_decode($this->client->deleteImages($this->config->serviceId, [$path]), true);
-        if (isset($response["ResponseMetadata"]["Error"])) {
-            throw new UnableToDeleteFile(sprintf("deleteImages: request id %s error %s", $response["ResponseMetadata"]["RequestId"], $response["ResponseMetadata"]["Error"]["Message"]));
-        }
-    }
-
-    public function visibility(string $path): FileAttributes
-    {
-        return $this->getFileMetadata($path);
-//        throw UnableToRetrieveMetadata::visibility($path, error_get_last()['message'] ?? '');
-    }
-
-    public function mimeType(string $path): FileAttributes
-    {
-        return $this->getFileMetadata($path);
-//        throw UnableToRetrieveMetadata::mimeType($path, error_get_last()['message'] ?? '');
-    }
-
-    public function lastModified(string $path): FileAttributes
-    {
-        return $this->getFileMetadata($path);
-//        throw UnableToRetrieveMetadata::lastModified($path, error_get_last()['message'] ?? '');
-    }
-
-    public function fileSize(string $path): FileAttributes
-    {
-        return $this->getFileMetadata($path);
-//        throw UnableToRetrieveMetadata::fileSize($path, error_get_last()['message'] ?? '');
-    }
-
-    public function listContents(string $path, bool $deep): iterable
-    {
-        $path = trim($path, '/\\');
+        $ret = [];
+        $path = trim($directory, '/\\');
 
         $continue = true;
         $offset = 0;
@@ -301,37 +317,61 @@ class ImageXAdapter implements FilesystemAdapter
 
             $fileObjects = $result['FileObjects'];
             foreach ($fileObjects as $data) {
-                yield new FileAttributes($data['FileName'], $data['FileSize'], null, strtotime($data['LastModified']), null, $data);
+                $data['LastModified'] = strtotime($data['LastModified']);
+                $data['size'] = $data['FileSize'];
+                $data['path'] = $data['FileName'];
+                array_push($ret, $data);
             }
 
             $offset += 100;
             $continue = $result['hasMore'];
         }
 
+        return $ret;
     }
 
-    public function move(string $source, string $destination, Config $config): void
+    public function getMetadata($path)
     {
-        // There is no move operation for ImageX so far
+        $path = $this->uriPrefix . '/' . $path;
+        $response = json_decode($this->getImageUploadFile($path), true);
+
+        if (isset($response["ResponseMetadata"]["Error"])) {
+            $error = $response["ResponseMetadata"]["Error"];
+            if ($error['CodeN'] == 604006) {
+                throw new FileNotFoundException($path);
+            } else {
+                throw new FilesystemException(sprintf(
+                    "getMetadata: request id %s, path %s, error %s",
+                    $response["ResponseMetadata"]["RequestId"], $path, $response["ResponseMetadata"]["Error"]["Message"]
+                ));
+            }
+        }
+
+        $data = $response['Result'];
+        $data['LastModified'] = strtotime($data['LastModified']);
+        $data['size'] = $data['FileSize'];
+        $data['path'] = $data['FileName'];
+        return $data;
     }
 
-    public function copy(string $source, string $destination, Config $config): void
+    public function getSize($path)
     {
-        // There is no copy operation for ImageX so far
+        return $this->getMetadata($path);
     }
 
-    public function deleteDirectory(string $path): void
+    public function getMimetype($path)
     {
-        // There is no directory operation for ImageX so far
+        return $this->getMetadata($path);
     }
 
-    public function createDirectory(string $path, Config $config): void
+    public function getTimestamp($path)
     {
-        // There is no directory operation for ImageX so far
+        return $this->getMetadata($path);
     }
 
-    public function setVisibility(string $path, string $visibility): void
+    public function getVisibility($path)
     {
-        // There is no visibility operation for ImageX so far
+        return $this->getMetadata($path);
     }
+
 }

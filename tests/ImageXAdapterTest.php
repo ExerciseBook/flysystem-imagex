@@ -4,8 +4,7 @@ namespace ExerciseBook\Flysystem\ImageX\Test;
 
 use ExerciseBook\Flysystem\ImageX\ImageXAdapter;
 use League\Flysystem\Config as FlysystemConfig;
-use League\Flysystem\FileAttributes;
-use League\Flysystem\UnableToDeleteFile;
+use League\Flysystem\FileNotFoundException;
 use PHPUnit\Framework\TestCase;
 
 require('Config.php');
@@ -53,9 +52,9 @@ class ImageXAdapterTest extends TestCase
         ];
 
         foreach ($response as $file) {
-            if ($file instanceof FileAttributes) {
-                if (isset($map[$file->path()])) {
-                    $map[$file->path()] = true;
+            if (is_array($file)) {
+                if (isset($map[$file['path']])) {
+                    $map[$file['path']] = true;
                 }
             }
         }
@@ -70,14 +69,14 @@ class ImageXAdapterTest extends TestCase
     public function testVisibility()
     {
 //        $this->assertEquals(strlen('1145141919810'), $this->adapter->visibility('test/test.txt')->fileSize());
-        $this->assertEquals(318178, $this->adapter->visibility('test/ori.jpg')->fileSize());
-        $this->assertEquals(318178, $this->adapter->visibility('test/ori_stream.jpg')->fileSize());
+        $this->assertEquals(318178, $this->adapter->getVisibility('test/ori.jpg')['FileSize']);
+        $this->assertEquals(318178, $this->adapter->getVisibility('test/ori_stream.jpg')['FileSize']);
     }
 
     public function testFileExists()
     {
-        $this->assertTrue($this->adapter->fileExists('test/ori.jpg'));
-        $this->assertFalse($this->adapter->fileExists('test/file_not_exist.jpg'));
+        $this->assertTrue($this->adapter->has('test/ori.jpg'));
+        $this->assertFalse($this->adapter->has('test/file_not_exist.jpg'));
     }
 
     public function testRead()
@@ -88,7 +87,7 @@ class ImageXAdapterTest extends TestCase
 
     public function testReadNonExistentFile()
     {
-        $this->expectException(UnableToDeleteFile::class);
+        $this->expectException(FileNotFoundException::class);
         $this->adapter->delete('test/non_existent_file.jpg');
     }
 
@@ -104,7 +103,7 @@ class ImageXAdapterTest extends TestCase
 
     public function testDeleteNonExistentFile()
     {
-        $this->expectException(UnableToDeleteFile::class);
+        $this->expectException(FileNotFoundException::class);
         $this->adapter->delete('test/non_existent_file.jpg');
         $this->assertTrue(true);
     }
