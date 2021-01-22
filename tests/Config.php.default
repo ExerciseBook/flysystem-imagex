@@ -17,11 +17,11 @@ class Config extends ImageXConfig
     public $domain = 'Binding Domain';
 
     static public $arrayConfig = [
-                      ‘region’ => 'Region',
-                      ‘access_key‘ => 'Access Key',
-                      ‘secret_key’ => 'Secret Key',
-                      ‘service_id‘ => 'Service ID',
-                      ‘domain’ => 'Binding Domain'
+                      "region" => 'Region',
+                      "access_key" => 'Access Key',
+                      "secret_key" => 'Secret Key',
+                      "service_id" => 'Service ID',
+                      "domain" => 'Binding Domain'
                   ];
 
 }
