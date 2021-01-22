@@ -17,11 +17,11 @@ ImageX 的 Flysystem 兼容层接口
 ```php
 
 $imageX = new ImageXAdapter([
-                                ‘region’ => 'Region',
-                                ‘access_key‘ => 'Access Key',
-                                ‘secret_key’ => 'Secret Key',
-                                ‘service_id‘ => 'Service ID',
-                                ‘domain’ => 'Binding Domain'
-                            ]);
+                                  "region" => 'Region',
+                                  "access_key" => 'Access Key',
+                                  "secret_key" => 'Secret Key',
+                                  "service_id" => 'Service ID',
+                                  "domain" => 'Binding Domain'
+                              ]);
 
 ```
