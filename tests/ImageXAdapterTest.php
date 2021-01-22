@@ -25,7 +25,8 @@ class ImageXAdapterTest extends TestCase
     public function testWrite()
     {
         $config = new FlysystemConfig();
-        $this->adapter->write('test/test.txt', '1145141919810', $config);
+        $t = $this->adapter->write('test/test.txt', '1145141919810', $config);
+        $this->assertEquals('test/test.txt', $t['path']);
 
         $contents = file_get_contents('resources/ori.jpg');
         $this->adapter->write('test/ori.jpg', $contents, $config);
@@ -82,7 +83,7 @@ class ImageXAdapterTest extends TestCase
     public function testRead()
     {
         $content = $this->adapter->read('test/test.txt');
-        $this->assertEquals('1145141919810', $content);
+        $this->assertEquals('1145141919810', $content['contents']);
     }
 
     public function testReadNonExistentFile()
@@ -96,7 +97,7 @@ class ImageXAdapterTest extends TestCase
         $expectedContents = fopen('resources/ori.jpg', 'rb');
         $actualContent = $this->adapter->readStream('test/ori_stream.jpg');
 
-        $this->assertEquals(stream_get_contents($expectedContents), stream_get_contents($actualContent));
+        $this->assertEquals(stream_get_contents($expectedContents), stream_get_contents($actualContent['stream']));
 
         fclose($expectedContents);
     }

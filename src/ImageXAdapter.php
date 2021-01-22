@@ -187,7 +187,7 @@ class ImageXAdapter extends AbstractAdapter implements CanOverwriteFiles
             throw new FilesystemException(sprintf("uploadImages: request id %s error %s", $response["ResponseMetadata"]["RequestId"], $response["ResponseMetadata"]["Error"]["Message"]));
         }
 
-        // TODO 添加返回值
+        return $this->getMetadata($path);
     }
 
     public function writeStream($path, $resource, Config $config)
@@ -278,7 +278,11 @@ class ImageXAdapter extends AbstractAdapter implements CanOverwriteFiles
 
         $httpClient = new Client();
         $url = $this->config->domain . '/' . $this->uriPrefix . '/' . $path;
-        return $httpClient->get($url)->getBody()->getContents();
+        return [
+            'type' => 'file',
+            'path' => $path,
+            'contents' => $httpClient->get($url)->getBody()->getContents()
+        ];
     }
 
     public function readStream($path)
@@ -289,7 +293,11 @@ class ImageXAdapter extends AbstractAdapter implements CanOverwriteFiles
 
         $httpClient = new Client();
         $url = $this->config->domain . '/' . $this->uriPrefix . '/' . $path;
-        return $httpClient->get($url)->getBody()->detach();
+        return [
+            'type' => 'file',
+            'path' => $path,
+            'stream' => $httpClient->get($url)->getBody()->detach()
+        ];
     }
 
     public function listContents($directory = '', $recursive = false)
@@ -311,6 +319,9 @@ class ImageXAdapter extends AbstractAdapter implements CanOverwriteFiles
             $fileObjects = $result['FileObjects'];
             foreach ($fileObjects as $data) {
                 $data['LastModified'] = strtotime($data['LastModified']);
+                $data['timestamp'] = $data['LastModified'];
+
+                $data['type'] = 'file';
                 $data['size'] = $data['FileSize'];
                 $data['path'] = $data['FileName'];
                 array_push($ret, $data);
@@ -342,6 +353,9 @@ class ImageXAdapter extends AbstractAdapter implements CanOverwriteFiles
 
         $data = $response['Result'];
         $data['LastModified'] = strtotime($data['LastModified']);
+        $data['timestamp'] = $data['LastModified'];
+
+        $data['type'] = 'file';
         $data['size'] = $data['FileSize'];
         $data['path'] = $data['FileName'];
         return $data;
