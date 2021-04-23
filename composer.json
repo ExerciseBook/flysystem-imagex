@@ -1,7 +1,7 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
     "name": "exercisebook/flysystem-imagex",
-    "description": "ImageX adapter for Cloudinary",
+    "description": "ImageX adapter for Flysystem",
     "type": "library",
     "authors": [
         {
