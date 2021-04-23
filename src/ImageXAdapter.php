@@ -2,11 +2,11 @@
 
 namespace ExerciseBook\Flysystem\ImageX;
 
-use Composer\Downloader\FilesystemException;
 use GuzzleHttp\Client;
 use League\Flysystem\Adapter\AbstractAdapter;
 use League\Flysystem\Adapter\CanOverwriteFiles;
 use League\Flysystem\Config;
+use League\Flysystem\Exception as FilesystemException;
 use League\Flysystem\FileNotFoundException;
 use Volc\Service\ImageX;
 
