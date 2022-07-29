@@ -79,6 +79,14 @@ class ImageXAdapter extends AbstractAdapter implements CanOverwriteFiles
         return $prefix . $this->config->serviceId;
     }
 
+    private function arrayGetDefault($arr, $key, $default = null)
+    {
+        if (array_key_exists($key, $arr)) {
+            return $arr[$key];
+        }
+        return $default;
+    }
+
     /**
      * ImageX Interface getImageUploadFiles
      *
@@ -318,13 +326,7 @@ class ImageXAdapter extends AbstractAdapter implements CanOverwriteFiles
 
             $fileObjects = $result['FileObjects'];
             foreach ($fileObjects as $data) {
-                $data['LastModified'] = strtotime($data['LastModified']);
-                $data['timestamp'] = $data['LastModified'];
-
-                $data['type'] = 'file';
-                $data['size'] = $data['FileSize'];
-                $data['path'] = $data['FileName'];
-                array_push($ret, $data);
+                $ret[] = $this->handleFileMetadata($data);
             }
 
             $offset += 100;
@@ -352,13 +354,7 @@ class ImageXAdapter extends AbstractAdapter implements CanOverwriteFiles
         }
 
         $data = $response['Result'];
-        $data['LastModified'] = strtotime($data['LastModified']);
-        $data['timestamp'] = $data['LastModified'];
-
-        $data['type'] = 'file';
-        $data['size'] = $data['FileSize'];
-        $data['path'] = $data['FileName'];
-        return $data;
+        return $this->handleFileMetadata($data);
     }
 
     public function getSize($path)
@@ -379,6 +375,17 @@ class ImageXAdapter extends AbstractAdapter implements CanOverwriteFiles
     public function getVisibility($path)
     {
         return $this->getMetadata($path);
+    }
+
+    private function handleFileMetadata($data)
+    {
+        $data['LastModified'] = strtotime($this->arrayGetDefault($data, 'LastModified', '0'));
+        $data['timestamp'] = $data['LastModified'];
+
+        $data['type'] = 'file';
+        $data['size'] = $this->arrayGetDefault($data, 'FileSize', '0');
+        $data['path'] = $this->arrayGetDefault($data, 'StoreUri', '');
+        return $data;
     }
 
 }
