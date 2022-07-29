@@ -7,8 +7,9 @@ ImageX 的 Flysystem 兼容层接口
 ### 准备
 
 - 创建 ImageX 服务并且服务能够使用。
-- 确保服务已经开启了原地址访问和上传任意文件功能。  
-  这两个功能默认关闭，需要 [提工单](https://console.volcengine.com/ticket/createTicket/?step=3&ProviderName=%E5%9B%BE%E7%89%87%E6%9C%8D%E5%8A%A1ImageX&TemplateName=%E5%8A%9F%E8%83%BD%E9%85%8D%E7%BD%AE) 申请开启。  
+- 确保服务已经开启了原地址访问。  
+  该功能在服务设置里开启
+- ImageX 类型为图像存储服务的服务，默认只允许上传图像，如果要在图像存储服务中存储其他类型的文件需要 [提工单](https://console.volcengine.com/ticket/createTicket/?step=3&ProviderName=%E5%9B%BE%E7%89%87%E6%9C%8D%E5%8A%A1ImageX&TemplateName=%E5%8A%9F%E8%83%BD%E9%85%8D%E7%BD%AE) 申请开启。  
   工单信息：
     - 问题类型：图片解决方案 / 功能配置
     - 问题描述：PHP框架源地址访问配置

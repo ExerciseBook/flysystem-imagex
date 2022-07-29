@@ -82,6 +82,14 @@ class ImageXAdapter implements FilesystemAdapter
         return $prefix . $this->config->serviceId;
     }
 
+    private function arrayGetDefault($arr, $key, $default = null)
+    {
+        if (array_key_exists($key, $arr)) {
+            return $arr[$key];
+        }
+        return $default;
+    }
+
     /**
      * ImageX Interface getImageUploadFiles
      *
@@ -149,7 +157,7 @@ class ImageXAdapter implements FilesystemAdapter
         }
 
         $data = $response['Result'];
-        return new FileAttributes($data['FileName'], $data['FileSize'], null, strtotime($data['LastModified']), null, $data);
+        return new FileAttributes($data['StoreUri'], $data['FileSize'], null, strtotime($data['LastModified']), null, $data);
     }
 
     public function fileExists(string $path): bool
@@ -301,7 +309,7 @@ class ImageXAdapter implements FilesystemAdapter
 
             $fileObjects = $result['FileObjects'];
             foreach ($fileObjects as $data) {
-                yield new FileAttributes($data['FileName'], $data['FileSize'], null, strtotime($data['LastModified']), null, $data);
+                yield new FileAttributes($data['StoreUri'], $data['FileSize'], null, strtotime($data['LastModified']), null, $data);
             }
 
             $offset += 100;

@@ -28,4 +28,5 @@ class ImageXConfig
      * @var string 绑定域名
      */
     public $domain;
+
 }
