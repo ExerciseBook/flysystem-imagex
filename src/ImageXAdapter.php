@@ -342,4 +342,9 @@ class ImageXAdapter implements FilesystemAdapter
     {
         // There is no visibility operation for ImageX so far
     }
+
+    public function directoryExists(string $path): bool
+    {
+        return true;
+    }
 }
