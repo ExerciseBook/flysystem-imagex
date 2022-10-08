@@ -55,6 +55,30 @@ class ImageXAdapter extends AbstractAdapter implements CanOverwriteFiles
     }
 
     /**
+     * @return ImageXConfig
+     */
+    public function getConfig(): ImageXConfig
+    {
+        return $this->config;
+    }
+
+    /**
+     * @return ImageX
+     */
+    public function getClient()
+    {
+        return $this->client;
+    }
+
+    /**
+     * @return string
+     */
+    public function getUriPrefix(): string
+    {
+        return $this->uriPrefix;
+    }
+
+    /**
      * Generate the uri Prefix
      *
      * @return string
