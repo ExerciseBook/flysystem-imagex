@@ -187,7 +187,7 @@ class ImageXAdapter extends AbstractAdapter implements CanOverwriteFiles
         }
 
         // Upload
-        $crc32 = dechex(crc32($contents));
+        $crc32 = sprintf("%08x", crc32($contents));
         $tosClient = new Client([
             'base_uri' => "https://" . $uploadHost,
             'timeout' => 5.0,
