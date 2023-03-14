@@ -226,7 +226,7 @@ class ImageXAdapter implements FilesystemAdapter
         $crc32 = sprintf("%08x", crc32($contents));
         $tosClient = new Client([
             'base_uri' => "https://" . $uploadHost,
-            'timeout' => 5.0,
+            'timeout' => 300.0,
         ]);
         $response = $tosClient->request('PUT',
             $uploadAddr['StoreInfos'][0]["StoreUri"],
