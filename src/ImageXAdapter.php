@@ -173,7 +173,7 @@ class ImageXAdapter implements FilesystemAdapter
 
         if (isset($response["ResponseMetadata"]["Error"])) {
             $error = $response["ResponseMetadata"]["Error"];
-            if ($error['CodeN'] == 604006) {
+            if ($error['CodeN'] == 604006 || $error['CodeN'] == 604010) {
                 throw UnableToRetrieveMetadata::create($path, "any", $error['Message']);
             } else {
                 throw UnableToCheckFileExistence::forLocation($path);
@@ -285,10 +285,20 @@ class ImageXAdapter implements FilesystemAdapter
 
     public function delete(string $path): void
     {
+        // workaround for VolcEngine internal logic
+        if (!$this->fileExists($path)) {
+            throw new UnableToDeleteFile('deleteImages: file not found');
+        }
+
         $path = $this->uriPrefix . '/' . $path;
         $response = json_decode($this->client->deleteImages($this->config->serviceId, [$path]), true);
         if (isset($response["ResponseMetadata"]["Error"])) {
-            throw new UnableToDeleteFile(sprintf("deleteImages: request id %s error %s", $response["ResponseMetadata"]["RequestId"], $response["ResponseMetadata"]["Error"]["Message"]));
+            throw new UnableToDeleteFile(sprintf("deleteImages: request id %s error %s", $response["ResponseMetadata"]["RequestId"],
+                $response["ResponseMetadata"]["Error"]["Message"]));
+        }
+        if (!in_array($path, $response['Result']['DeletedFiles'])) {
+            throw new UnableToDeleteFile(sprintf("deleteImages: request id %s, %s", $response["ResponseMetadata"]["RequestId"],
+                'fail to delete file, path did not appear in deleted files list'));
         }
     }
 

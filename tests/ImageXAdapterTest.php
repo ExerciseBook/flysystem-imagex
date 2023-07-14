@@ -45,11 +45,11 @@ class ImageXAdapterTest extends TestCase
     public function testListContents()
     {
         $response = $this->adapter->listContents('test/', true);
-
+        $prefix = $this->adapter->getUriPrefix();
         $map = [
-            'test/ori.jpg' => false,
-            'test/ori_stream.jpg' => false,
-            'test/test.txt' => false
+            $prefix . '/test/ori.jpg' => false,
+            $prefix . '/test/ori_stream.jpg' => false,
+            $prefix . '/test/test.txt' => false
         ];
 
         foreach ($response as $file) {
