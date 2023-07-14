@@ -283,6 +283,14 @@ class ImageXAdapter implements FilesystemAdapter
         return $httpClient->get($url)->getBody()->detach();
     }
 
+    public function deletefiles(string $path)
+    {
+        $path = $this->uriPrefix . '/' . $path;
+        $response = json_decode($this->client->deleteImages($this->config->serviceId, [$path]), true);
+        
+        return $response;
+    }
+
     public function delete(string $path): void
     {
         $path = $this->uriPrefix . '/' . $path;
